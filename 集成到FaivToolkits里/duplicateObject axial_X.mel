@@ -1,0 +1,28 @@
+//以选中物体的坐标系为中心，在x轴上镜像复制选中物体。
+//不要有父子关系
+
+//复制
+duplicate -rr; scale -r -1 1 1;
+
+
+//freeze 缩放
+makeIdentity -apply true -t 0 -r 0 -s 1 -n 0;
+
+
+//关闭Opposite渲染统计信息
+string $mysel[] = `ls - sl`;
+for ($mynode in $mysel){
+    setAttr ($mynode+".opposite") 0;
+};
+
+
+//翻转法线
+ReversePolygonNormals;
+
+
+//删掉历史记录
+doBakeNonDefHistory( 1, {"prePost" });
+
+
+//取消选择
+select -cl  ;

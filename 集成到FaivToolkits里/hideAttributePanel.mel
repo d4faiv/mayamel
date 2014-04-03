@@ -1,0 +1,139 @@
+//隐藏选中物体的移动、旋转、缩放通道
+//2013-12-06	FAIV	Beijing
+
+global proc removeAttr(int $switch,string $attr,string $zyz){
+		string $mysel[] = `ls - sl`;
+		for ($mynode in $mysel){
+			setAttr -keyable $switch ($mynode+"."+$attr+$zyz);
+		}
+}
+
+	global proc removeT(int $switch){
+        removeAttr $switch t x;
+        removeAttr $switch t y;
+        removeAttr $switch t z;
+    }
+	global proc removeR(int $switch){
+        removeAttr $switch r x;
+        removeAttr $switch r y;
+        removeAttr $switch r z;
+    }
+	global proc removeS(int $switch){
+        removeAttr $switch s x;
+        removeAttr $switch s y;
+        removeAttr $switch s z;
+    }
+
+	global proc removeVisiable(int $switch){
+		string $mysel[] = `ls - sl`;
+		for ($mynode in $mysel){
+			setAttr -keyable $switch ($mynode+"."+"v");
+		}
+	}
+
+	global proc showAll(){
+		removeT 1;
+		removeR 1;
+		removeS 1;
+		removeVisiable 1;	
+	}
+global proc hideAttribute(){
+	if(`window -exists "hideAttributeUI"`)deleteUI hideAttributeUI;
+	
+	window -w 75 -mnb 0 -mxb 0 -sizeable 0 hideAttributeUI ;
+	string $Form = `formLayout`;
+		string $txyz = `button -label "t.xyz" -w 40 -h 60 -c "removeT 0"`;		
+		string $tx = `button -label "t.x" -w 20 -h 20 -c "removeAttr 0 t x"`;
+		string $ty = `button -label "t.y" -w 20 -h 20 -c "removeAttr 0 t y" `;
+		string $tz = `button -label "t.z" -w 20 -h 20 -c "removeAttr 0 t z" `;
+        
+		string $rxyz = `button -label "r.xyz" -w 40 -h 60 -c "removeR 0"`;
+		string $rx = `button -label "r.x" -w 20 -h 20 -c "removeAttr 0 r x"`;
+		string $ry = `button -label "r.y" -w 20 -h 20 -c "removeAttr 0 r y"`;
+		string $rz = `button -label "r.z" -w 20 -h 20 -c "removeAttr 0 r z"`;
+
+		string $sxyz = `button -label "s.xyz" -w 40 -h 60 -c "removeS 0"`;
+		string $sx = `button -label "s.x" -w 20 -h 20 -c "removeAttr 0 s x"`;
+		string $sy = `button -label "s.y" -w 20 -h 20 -c "removeAttr 0 s y"`;
+		string $sz = `button -label "s.z" -w 20 -h 20 -c "removeAttr 0 s z"`;
+
+		string $visible = `button -label "visible" -c "removeVisiable 0"`;
+
+		string $showAll = `button -h 40 -label "showAll" -c "showAll" `;
+
+			formLayout -edit
+            //T
+			-attachForm $txyz "top" 5
+			-attachForm $txyz "left" 5
+			-attachNone $txyz "right"
+			-attachNone $txyz "bottom" 
+
+			-attachForm $tx "top" 5
+			-attachControl $tx "left" 5 $txyz
+			-attachForm $tx "right" 5
+			-attachNone $tx "bottom"
+
+			-attachControl $ty "top" 0 $tx
+			-attachControl $ty "left" 5 $txyz
+			-attachForm $ty "right" 5
+			-attachNone $ty "bottom"
+
+			-attachControl $tz "top" 0 $ty
+			-attachControl $tz "left" 5 $txyz
+			-attachForm $tz "right" 5
+			-attachNone $tz "bottom"
+            //R
+			-attachControl $rxyz "top" 10 $txyz
+			-attachForm $rxyz "left" 5
+			-attachNone $rxyz "right"
+			-attachNone $rxyz "bottom" 
+
+			-attachControl $rx "top" 10 $txyz
+			-attachControl $rx "left" 5 $rxyz
+			-attachForm $rx "right" 5
+			-attachNone $rx "bottom"
+
+			-attachControl $ry "top" 0 $rx
+			-attachControl $ry "left" 5 $rxyz
+			-attachForm $ry "right" 5
+			-attachNone $ry "bottom"
+
+			-attachControl $rz "top" 0 $ry
+			-attachControl $rz "left" 5 $rxyz
+			-attachForm $rz "right" 5
+			-attachNone $rz "bottom"
+            //S
+			-attachControl $sxyz "top" 10 $rxyz
+			-attachForm $sxyz "left" 5
+			-attachNone $sxyz "right"
+			-attachNone $sxyz "bottom" 
+
+			-attachControl $sx "top" 10 $rxyz
+			-attachControl $sx "left" 5 $sxyz
+			-attachForm $sx "right" 5
+			-attachNone $sx "bottom"
+
+			-attachControl $sy "top" 0 $sx
+			-attachControl $sy "left" 5 $sxyz
+			-attachForm $sy "right" 5
+			-attachNone $sy "bottom"
+
+			-attachControl $sz "top" 0 $sy
+			-attachControl $sz "left" 5 $sxyz
+			-attachForm $sz "right" 5
+			-attachNone $sz "bottom"
+            //v        
+			-attachControl $visible "top" 10 $sxyz
+			-attachForm $visible "left" 5 
+			-attachForm $visible "right" 5
+			-attachNone $visible "bottom"
+			//showAll
+			-attachControl $showAll "top" 5 $visible
+			-attachForm $showAll "left" 5 
+			-attachForm $showAll "right" 5
+			-attachForm $showAll "bottom" 5
+			
+	$Form;
+	showWindow hideAttributeUI;
+}
+hideAttribute();

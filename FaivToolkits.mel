@@ -1,0 +1,374 @@
+////////////////////////////////////////////////
+//FaivToolkits
+//Author:Faiv
+//email:d4faiv@gmail.com
+//Thanks to:
+//	xx(xiexi) for all
+//	Daniel Brkovic for alignPivotToSelection http://www.creativecrash.com/maya/script/align-pivot-to-selection-mel
+//	Tom Ferstl for alignPivotToSelection http://www.creativecrash.com/maya/script/align-pivot-to-selection-mel
+//update:2014-04-02
+////////////////////////////////////////////////
+global proc FaivToolkits(){
+	//global string $gMainWindow;
+	//setParent $gMainWindow;
+	if(`menu -ex "FaivToolkitsMenu"`)deleteUI FaivToolkitsMenu;
+	menu -l "FaivToolkits"
+		-p MayaWindow
+		-to 1
+		-aob true
+		FaivToolkitsMenu;
+/*--------------------------------------*/
+
+	menuItem -sm true -l "create";
+			menuItem -l "guideCurve01"-ann "testing" -c "curve -d 1 -p 0 5 0 -p 2 3 0 -p 1 3 0 -p 1 1 0 -p 3 1 0 -p 3 2 0 -p 5 0 0 -p 3 -2 0 -p 3 -1 0 -p 1 -1 0 -p 1 -3 0 -p 2 -3 0 -p 0 -5 0 -p -2 -3 0 -p -1 -3 0 -p -1 -1 0 -p -3 -1 0 -p -3 -2 0 -p -5 0 0 -p -3 2 0 -p -3 1 0 -p -1 1 0 -p -1 3 0 -p -2 3 0 -p 0 5 0 -k 0 -k 1 -k 2 -k 3 -k 4 -k 5 -k 6 -k 7 -k 8 -k 9 -k 10 -k 11 -k 12 -k 13 -k 14 -k 15 -k 16 -k 17 -k 18 -k 19 -k 20 -k 21 -k 22 -k 23 -k 24 ";
+			setParent -menu ..;
+	menuItem -l "locatorPlus" -ann "Create locators with selected Pivot" -c "locatorPlus";
+	menuItem -l "mirrorDuplicateX" -ann "mirrorDuplicateX" -c "mirrorDuplicateX";
+	menuItem -l "curveOffset..." -ann "curveOffset" -c "curveOffset";
+	menuItem -divider true;		//-------
+	menuItem -l "hideAttributePanel..." -ann "hideAttributePanel" -c "hideAttribute";
+	menuItem -l "resetChannelBox" -ann "resetChannelBox" -c "resetChannelBox";
+	menuItem -divider true;		//-------
+	menuItem -l "matchTransform" -ann "All of the selected object will be set the same position and rotation as the first selected object" -c "matchTransform";
+	menuItem -l "matchPivot" -ann "All of the selected object will be set the same Pivot as the first selected object" -c "matchPivot";
+	menuItem -divider true;		//-------
+	menuItem -l "resetPivots to origin" -ann "resetPivots to 0 0 0" -c "xform -ws -piv 0 0 0";
+	menuItem -l "CenterPivot" -ann "CenterPivot" -c "CenterPivot";
+	menuItem -l "alignPivotToSelection(only rotate)" -ann "alignPivotToSelection(0)" -c "alignPivotToSelection(0)";
+	menuItem -l "alignPivotToSelection(transform)" -ann "alignPivotToSelection(1)" -c "alignPivotToSelection(1)";
+	menuItem -divider true;		//-------
+	menuItem -l "resetTransformation" -ann "resetTransformation" -c "resetTransformation";
+}
+
+
+/*--------------------------------------*/
+
+//locatorPlus
+global proc locatorPlus(){
+	string $sels[] = `ls -sl -tr`;
+    string $suffix = "_loc";
+	for($sel in $sels){
+		vector $p  = `xform -q -ws -rotatePivot $sel`;
+		CreateLocator;
+		rename ($sel+$suffix);
+		move -xyz($p.x)($p.y)($p.z);
+		}
+}
+
+//mirrorDuplicateX
+global proc mirrorDuplicateX(){
+	duplicate -rr; scale -r -1 1 1;
+
+	makeIdentity -apply true -t 0 -r 0 -s 1 -n 0;
+
+	string $mysel[] = `ls - sl`;
+	for ($mynode in $mysel){
+	    setAttr ($mynode+".opposite") 0;
+	};
+
+	ReversePolygonNormals;
+
+	doBakeNonDefHistory( 1, {"prePost" });
+
+	select -cl  ;
+}
+
+//matchTransform
+global proc matchTransform(){
+	string $obj[] = `ls -sl`;
+	int $num = `size $obj`;
+	float $rot[] = `xform -q -ws -ro $obj[0]`; 
+	float $t[] = `xform -q -ws -t $obj[0]`;
+	float $piv[] = `xform -q -ws -piv $obj[0]`;
+
+	for($i=1;$i<$num;$i++){
+		xform -ws -ro $rot[0] $rot[1] $rot[2] $obj[$i];
+		float $ipiv[] = `xform -q -r -piv $obj[$i]`;
+		move -ws -xyz ($ipiv[0]*-1) ($ipiv[1]*-1) ($ipiv[2]*-1) $obj[$i];
+		move -r -xyz $piv[0] $piv[1] $piv[2] $obj[$i];
+	}
+}
+
+//matchPivot;
+global proc matchPivot(){
+	string $obj[] = `ls -sl`;
+	int $num = `size $obj`;
+	float $t[] = `xform -q -ws -t $obj[0]`;
+	float $piv[] = `xform -q -ws -piv $obj[0]`;
+
+	for($i=1;$i<$num;$i++){
+		xform -ws -piv $piv[0] $piv[1] $piv[2] $obj[$i];
+//		float $ipiv[] = `xform -q -r -piv $obj[$i]`;
+//		move -ws -xyz ($ipiv[0]*-1) ($ipiv[1]*-1) ($ipiv[2]*-1) ($obj[$i]+".scalePivot");
+//		move -r -xyz $piv[0] $piv[1] $piv[2] ($obj[$i]+".scalePivot");
+	}
+}
+
+//resetTransformation
+global proc resetTransformation(){
+	string $mysel[] = `ls - sl`;
+	for ($mynode in $mysel){
+		setAttr ($mynode+".tx") 0;
+		setAttr ($mynode+".ty") 0;
+		setAttr ($mynode+".tz") 0;
+
+		setAttr ($mynode+".rx") 0;
+		setAttr ($mynode+".ry") 0;
+		setAttr ($mynode+".rz") 0;
+
+		setAttr ($mynode+".sx") 1;
+		setAttr ($mynode+".sy") 1;
+		setAttr ($mynode+".sz") 1;
+	}
+}
+
+
+//hideAttribute
+global proc removeAttr(int $switch,string $attr,string $zyz){
+		string $mysel[] = `ls - sl`;
+		for ($mynode in $mysel){
+			setAttr -keyable $switch ($mynode+"."+$attr+$zyz);
+		}
+}
+
+	global proc removeT(int $switch){
+        removeAttr $switch t x;
+        removeAttr $switch t y;
+        removeAttr $switch t z;
+    }
+	global proc removeR(int $switch){
+        removeAttr $switch r x;
+        removeAttr $switch r y;
+        removeAttr $switch r z;
+    }
+	global proc removeS(int $switch){
+        removeAttr $switch s x;
+        removeAttr $switch s y;
+        removeAttr $switch s z;
+    }
+
+	global proc removeVisiable(int $switch){
+		string $mysel[] = `ls - sl`;
+		for ($mynode in $mysel){
+			setAttr -keyable $switch ($mynode+"."+"v");
+		}
+	}
+
+	global proc showAll(){
+		removeT 1;
+		removeR 1;
+		removeS 1;
+		removeVisiable 1;
+	}
+global proc hideAttribute(){
+	if(`window -exists "hideAttributeUI"`)deleteUI hideAttributeUI;
+	
+	window -w 75 -mnb 0 -mxb 0 -sizeable 0 hideAttributeUI ;
+	string $Form = `formLayout`;
+		string $txyz = `button -label "t.xyz" -w 40 -h 60 -c "removeT 0"`;		
+		string $tx = `button -label "t.x" -w 20 -h 20 -c "removeAttr 0 t x"`;
+		string $ty = `button -label "t.y" -w 20 -h 20 -c "removeAttr 0 t y" `;
+		string $tz = `button -label "t.z" -w 20 -h 20 -c "removeAttr 0 t z" `;
+        
+		string $rxyz = `button -label "r.xyz" -w 40 -h 60 -c "removeR 0"`;
+		string $rx = `button -label "r.x" -w 20 -h 20 -c "removeAttr 0 r x"`;
+		string $ry = `button -label "r.y" -w 20 -h 20 -c "removeAttr 0 r y"`;
+		string $rz = `button -label "r.z" -w 20 -h 20 -c "removeAttr 0 r z"`;
+
+		string $sxyz = `button -label "s.xyz" -w 40 -h 60 -c "removeS 0"`;
+		string $sx = `button -label "s.x" -w 20 -h 20 -c "removeAttr 0 s x"`;
+		string $sy = `button -label "s.y" -w 20 -h 20 -c "removeAttr 0 s y"`;
+		string $sz = `button -label "s.z" -w 20 -h 20 -c "removeAttr 0 s z"`;
+
+		string $visible = `button -label "visible" -c "removeVisiable 0"`;
+
+		string $showAll = `button -h 40 -label "showAll" -c "showAll" `;
+
+			formLayout -edit
+            //T
+			-attachForm $txyz "top" 5
+			-attachForm $txyz "left" 5
+			-attachNone $txyz "right"
+			-attachNone $txyz "bottom" 
+
+			-attachForm $tx "top" 5
+			-attachControl $tx "left" 5 $txyz
+			-attachForm $tx "right" 5
+			-attachNone $tx "bottom"
+
+			-attachControl $ty "top" 0 $tx
+			-attachControl $ty "left" 5 $txyz
+			-attachForm $ty "right" 5
+			-attachNone $ty "bottom"
+
+			-attachControl $tz "top" 0 $ty
+			-attachControl $tz "left" 5 $txyz
+			-attachForm $tz "right" 5
+			-attachNone $tz "bottom"
+            //R
+			-attachControl $rxyz "top" 10 $txyz
+			-attachForm $rxyz "left" 5
+			-attachNone $rxyz "right"
+			-attachNone $rxyz "bottom" 
+
+			-attachControl $rx "top" 10 $txyz
+			-attachControl $rx "left" 5 $rxyz
+			-attachForm $rx "right" 5
+			-attachNone $rx "bottom"
+
+			-attachControl $ry "top" 0 $rx
+			-attachControl $ry "left" 5 $rxyz
+			-attachForm $ry "right" 5
+			-attachNone $ry "bottom"
+
+			-attachControl $rz "top" 0 $ry
+			-attachControl $rz "left" 5 $rxyz
+			-attachForm $rz "right" 5
+			-attachNone $rz "bottom"
+            //S
+			-attachControl $sxyz "top" 10 $rxyz
+			-attachForm $sxyz "left" 5
+			-attachNone $sxyz "right"
+			-attachNone $sxyz "bottom" 
+
+			-attachControl $sx "top" 10 $rxyz
+			-attachControl $sx "left" 5 $sxyz
+			-attachForm $sx "right" 5
+			-attachNone $sx "bottom"
+
+			-attachControl $sy "top" 0 $sx
+			-attachControl $sy "left" 5 $sxyz
+			-attachForm $sy "right" 5
+			-attachNone $sy "bottom"
+
+			-attachControl $sz "top" 0 $sy
+			-attachControl $sz "left" 5 $sxyz
+			-attachForm $sz "right" 5
+			-attachNone $sz "bottom"
+            //v        
+			-attachControl $visible "top" 10 $sxyz
+			-attachForm $visible "left" 5 
+			-attachForm $visible "right" 5
+			-attachNone $visible "bottom"
+			//showAll
+			-attachControl $showAll "top" 5 $visible
+			-attachForm $showAll "left" 5 
+			-attachForm $showAll "right" 5
+			-attachForm $showAll "bottom" 5
+			
+	$Form;
+	showWindow hideAttributeUI;
+}
+
+//resetChannelBox
+global proc resetChannelBox(){
+	string $sels[] = `ls - sl`;
+	for ($sel in $sels){
+		setAttr -keyable 1 ($sel+".tx");
+		setAttr -keyable 1 ($sel+".ty");
+		setAttr -keyable 1 ($sel+".tz");
+		setAttr -keyable 1 ($sel+".rx");
+		setAttr -keyable 1 ($sel+".ry");
+		setAttr -keyable 1 ($sel+".rz");
+		setAttr -keyable 1 ($sel+".sx");
+		setAttr -keyable 1 ($sel+".sy");
+		setAttr -keyable 1 ($sel+".sz");
+		setAttr -keyable 1 ($sel+".visibility");
+		
+		setAttr -lock 0 ($sel+".tx");
+		setAttr -lock 0 ($sel+".ty");
+		setAttr -lock 0 ($sel+".tz");
+		setAttr -lock 0 ($sel+".rx");
+		setAttr -lock 0 ($sel+".ry");
+		setAttr -lock 0 ($sel+".rz");
+		setAttr -lock 0 ($sel+".sx");
+		setAttr -lock 0 ($sel+".sy");
+		setAttr -lock 0 ($sel+".sz");
+		setAttr -lock 0 ($sel+".visibility");
+	};
+}
+
+//curveOffset
+global proc curveOffset(){
+	if(`window -ex "curveOffset"`)deleteUI curveOffset;
+	window -t "offsetValue"   -rtf true -s false "curveOffset";
+	columnLayout -adj true -rs 10 -cat "both" 10  parameters;
+	setParent ..;
+	rowLayout -nc 2 -cl2 "center" "center";
+		text -l "curve offsetValue" -align "right";
+		floatField -w 80 -v 0.001 -pre 3 offsetValue;
+	setParent ..;
+	rowLayout -nc 2 -cl2 "center" "center";
+		button -l "ok" -w 80 -c "keyframe -r -vc (floatField(\"-q\", \"-v\",\"offsetValue\"))";
+		button -l "cancel" -w 80 -c "deleteUI curveOffset" -al "center";
+showWindow curveOffset;
+}
+
+//alignPivotToSelection
+global proc alignPivotToSelection( int $option )
+{
+	if ($option == 0)
+	{
+		ConvertSelectionToVertices;
+		string $vtxSel[] = `ls -sl -fl`;
+		string $selectedObjectStore[] = `ls -sl -o`;
+		$objectSelectionStore = `listRelatives -p $selectedObjectStore[0]`;
+
+		if (size($vtxSel) < 3)
+			error "Please select at least 3 Vertices, 2 Edges or 1 Face";
+
+		// create and align helperPlane
+		string $plane[] = `polyPlane -w 1 -h 1 -sx 1 -sy 1 -ax 0 1 0 -cuv 2 -ch 1 -n rotationPlane`;
+
+		select ( $plane[0] + ".vtx[0:2]") $vtxSel[0] $vtxSel[1] $vtxSel[2];
+		snap3PointsTo3Points(0);
+	
+		// parent object to helperPlane
+		parent $objectSelectionStore $plane[0];
+
+		// freeze transformations on object    
+		makeIdentity -apply true -t 0 -r 1 -s 0 -n 0 $objectSelectionStore;
+    
+		// unparent object
+		parent -world $objectSelectionStore;
+
+		// cleanup
+		delete $plane;
+	}
+    
+	else if ($option == 1)
+	{
+		setToolTo Move;
+		float $getPivotPos[] = `manipMoveContext -q -p Move`;  
+		ConvertSelectionToVertices;
+		string $vtxSel[] = `ls -sl -fl`;
+		string $selectedObjectStore[] = `ls -sl -o`;
+		$objectSelectionStore = `listRelatives -p $selectedObjectStore[0]`;
+
+		if (size($vtxSel) < 3)
+			error "Please select at least 3 Vertices, 2 Edges or 1 Face";
+
+		// create and align helperPlane
+		string $plane[] = `polyPlane -w 1 -h 1 -sx 1 -sy 1 -ax 0 1 0 -cuv 2 -ch 1 -n rotationPlane`;
+
+		select ( $plane[0] + ".vtx[0:2]") $vtxSel[0] $vtxSel[1] $vtxSel[2];
+		snap3PointsTo3Points(0);
+
+		// parent object to helperPlane
+		parent $objectSelectionStore $plane[0];
+
+		// freeze transformations on object
+		makeIdentity -apply true -t 0 -r 1 -s 0 -n 0 $objectSelectionStore;
+
+		// move pivot
+		xform -ws -piv $getPivotPos[0] $getPivotPos[1] $getPivotPos[2];
+
+		// unparent object
+		parent -world $objectSelectionStore;
+
+		// cleanup
+		delete $plane;
+	}
+}
+/*--------------------------------------*/
+FaivToolkits;

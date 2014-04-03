@@ -1,0 +1,15 @@
+global proc curveOffset(){
+	if(`window -ex "curveOffset"`)deleteUI curveOffset;
+	window -t "offsetValue"   -rtf true -s false "curveOffset";
+	columnLayout -adj true -rs 10 -cat "both" 10  parameters;
+	setParent ..;
+	rowLayout -nc 2 -cl2 "center" "center";
+		text -l "curve offsetValue" -align "right";
+		floatField -w 80 -v 0.001 -pre 3 offsetValue;
+	setParent ..;
+	rowLayout -nc 2 -cl2 "center" "center";
+		button -l "ok" -w 80 -c "keyframe -r -vc (floatField(\"-q\", \"-v\",\"offsetValue\"))";
+		button -l "cancel" -w 80 -c "deleteUI curveOffset" -al "center";
+showWindow curveOffset;
+}
+curveOffset;

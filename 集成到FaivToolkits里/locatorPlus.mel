@@ -1,0 +1,10 @@
+global proc locatorPlus(){
+	string $sels[] = `ls -sl -tr`;
+
+	for($sel in $sels){
+		vector $p  = `xform -q -ws -rotatePivot $sel`;
+		CreateLocator;
+		move -xyz($p.x)($p.y)($p.z);
+		}
+}
+locatorPlus;

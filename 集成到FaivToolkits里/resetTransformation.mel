@@ -1,0 +1,14 @@
+string $mysel[] = `ls - sl`;
+for ($mynode in $mysel){
+	setAttr ($mynode+".tx") 0;
+	setAttr ($mynode+".ty") 0;
+	setAttr ($mynode+".tz") 0;
+
+	setAttr ($mynode+".rx") 0;
+	setAttr ($mynode+".ry") 0;
+	setAttr ($mynode+".rz") 0;
+
+	setAttr ($mynode+".sx") 1;
+	setAttr ($mynode+".sy") 1;
+	setAttr ($mynode+".sz") 1;
+};

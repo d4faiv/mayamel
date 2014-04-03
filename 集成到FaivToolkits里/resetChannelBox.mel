@@ -1,0 +1,27 @@
+global proc resetChannelBox(){
+	string $sels[] = `ls - sl`;
+	for ($sel in $sels){
+		setAttr -keyable 1 ($sel+".tx");
+		setAttr -keyable 1 ($sel+".ty");
+		setAttr -keyable 1 ($sel+".tz");
+		setAttr -keyable 1 ($sel+".rx");
+		setAttr -keyable 1 ($sel+".ry");
+		setAttr -keyable 1 ($sel+".rz");
+		setAttr -keyable 1 ($sel+".sx");
+		setAttr -keyable 1 ($sel+".sy");
+		setAttr -keyable 1 ($sel+".sz");
+		setAttr -keyable 1 ($sel+".visibility");
+		
+		setAttr -lock 0 ($sel+".tx");
+		setAttr -lock 0 ($sel+".ty");
+		setAttr -lock 0 ($sel+".tz");
+		setAttr -lock 0 ($sel+".rx");
+		setAttr -lock 0 ($sel+".ry");
+		setAttr -lock 0 ($sel+".rz");
+		setAttr -lock 0 ($sel+".sx");
+		setAttr -lock 0 ($sel+".sy");
+		setAttr -lock 0 ($sel+".sz");
+		setAttr -lock 0 ($sel+".visibility");
+	};
+}
+resetChannelBox;

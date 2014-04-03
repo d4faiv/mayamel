@@ -1,0 +1,15 @@
+global proc matchTransform(){
+	string $obj[] = `ls -sl`;
+	int $num = `size $obj`;
+	float $rot[] = `xform -q -ws -ro $obj[0]`; 
+	float $t[] = `xform -q -ws -t $obj[0]`;
+	float $piv[] = `xform -q -ws -piv $obj[0]`;
+
+	for($i=1;$i<$num;$i++){
+		xform -ws -ro $rot[0] $rot[1] $rot[2] $obj[$i];
+		float $ipiv[] = `xform -q -r -piv $obj[$i]`;
+		move -ws -xyz ($ipiv[0]*-1) ($ipiv[1]*-1) ($ipiv[2]*-1) $obj[$i];
+		move -r -xyz $piv[0] $piv[1] $piv[2] $obj[$i];
+	}
+}
+matchTransform;
